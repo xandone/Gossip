@@ -22,17 +22,18 @@ import android.view.animation.RotateAnimation;
  */
 
 public class GossipView extends View {
-    private int mCircleL;
-    private int mCircleM_white;
-    private int mCircleM_black;
-    private int mCircleS_white;
-    private int mCircleS_black;
+    private int mCircleL;//大圆半径
+    private int mCircleM_white;//中白圆半径
+    private int mCircleM_black;//中黑圆半径
+    private int mCircleS_white;//小白圆半径
+    private int mCircleS_black;//小黑圆半径
 
-    private int mWidth;
-    private int mHeight;
+    private int mCurrentM_W;//缓存当前中白圆半径
+    private int mCurrentM_B;//缓存当前中黑圆半径
 
-    private int mRadius_value;
+    private int mRadius_value;//变幻值
     private boolean isSwitch;
+    private boolean isSetValue = true;
 
     private Paint mPaint;
     private RectF mRect;
@@ -41,6 +42,7 @@ public class GossipView extends View {
     private RotateAnimation mRotateAnimation;
 
     public static final int DURATION = 2000;
+    public static final int DURATION_LONG = 2000 * 2;
 
 
     public GossipView(Context context) {
@@ -100,8 +102,6 @@ public class GossipView extends View {
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
-        mWidth = w;
-        mHeight = h;
 
         mCircleL = w > h ? h / 2 : w / 2;
 
@@ -111,12 +111,62 @@ public class GossipView extends View {
         mCircleM_black = mCircleL / 2;
         mCircleS_black = mCircleM_black / 2;
 
+        mCurrentM_W = mCircleM_white;
+        mCurrentM_B = mCircleM_black;
+
         mRect = new RectF(0, 0, mCircleL * 2, mCircleL * 2);
 
         mValueAnimator = ValueAnimator.ofInt(0, mCircleL / 6);
         mValueAnimator.setInterpolator(new LinearInterpolator());
         mValueAnimator.setRepeatCount(ValueAnimator.INFINITE);
         mValueAnimator.setDuration(DURATION);
+
+        mValueAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator animation) {
+                mRadius_value = (int) animation.getAnimatedValue();
+                if (isSwitch) {
+                    mCircleM_white = mCurrentM_W - mRadius_value;
+                    mCircleM_black = mCurrentM_B + mRadius_value;
+                } else {
+                    mCircleM_white = mCurrentM_W + mRadius_value;
+                    mCircleM_black = mCurrentM_B - mRadius_value;
+                }
+                mCircleS_white = mCircleM_white / 2;
+                mCircleS_black = mCircleM_black / 2;
+                invalidate();
+            }
+        });
+        mValueAnimator.addListener(new Animator.AnimatorListener() {
+            @Override
+            public void onAnimationStart(Animator animation) {
+
+            }
+
+            @Override
+            public void onAnimationEnd(Animator animation) {
+
+            }
+
+            @Override
+            public void onAnimationCancel(Animator animation) {
+
+            }
+
+            @Override
+            public void onAnimationRepeat(Animator animation) {
+                if (isSetValue) {
+                    mValueAnimator.setIntValues(0, mCircleL / 2);
+                    mValueAnimator.setDuration(DURATION_LONG);
+                    isSetValue = false;
+                }
+
+                isSwitch = !isSwitch;
+                mCurrentM_W = mCircleM_white;
+                mCurrentM_B = mCircleM_black;
+            }
+        });
+
     }
 
     /**
@@ -126,25 +176,6 @@ public class GossipView extends View {
         if (mRotateAnimation != null && mValueAnimator != null) {
             startAnimation(mRotateAnimation);
             mValueAnimator.start();
-            mValueAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-                @Override
-                public void onAnimationUpdate(ValueAnimator animation) {
-                    mRadius_value = (int) animation.getAnimatedValue();
-                    if (mRadius_value == 0) {
-                        isSwitch = !isSwitch;
-                    }
-                    if (isSwitch) {
-                        mCircleM_white = mCircleL / 2 + mRadius_value;
-                        mCircleM_black = mCircleL / 2 - mRadius_value;
-                    } else {
-                        mCircleM_white = mCircleL / 2 + mRadius_value;
-                        mCircleM_black = mCircleL / 2 - mRadius_value;
-                    }
-
-                    Log.d("xandone", " w:" + mCircleM_white + "       b:" + mCircleM_black);
-                    invalidate();
-                }
-            });
         }
     }
 
@@ -152,16 +183,20 @@ public class GossipView extends View {
      * 停止旋转动画
      */
     public void stopRoate() {
+        isSwitch = false;
+        mCircleM_white = mCircleL / 2;
+        mCircleM_black = mCircleL / 2;
+        mCurrentM_W = mCircleM_white;
+        mCurrentM_B = mCircleM_black;
+
         if (mRotateAnimation != null) {
             mRotateAnimation.cancel();
         }
         if (mValueAnimator != null) {
             mValueAnimator.cancel();
         }
-    }
 
-    public void changeSize() {
-
+        invalidate();
     }
 
 }
