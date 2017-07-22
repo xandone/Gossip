@@ -105,14 +105,7 @@ public class GossipView extends View {
 
         mCircleL = w > h ? h / 2 : w / 2;
 
-        mCircleM_white = mCircleL / 2;
-        mCircleS_white = mCircleM_white / 2;
-
-        mCircleM_black = mCircleL / 2;
-        mCircleS_black = mCircleM_black / 2;
-
-        mCurrentM_W = mCircleM_white;
-        mCurrentM_B = mCircleM_black;
+        initSize();
 
         mRect = new RectF(0, 0, mCircleL * 2, mCircleL * 2);
 
@@ -175,6 +168,7 @@ public class GossipView extends View {
     public void startRotate() {
         if (mRotateAnimation != null && mValueAnimator != null) {
             startAnimation(mRotateAnimation);
+            mValueAnimator.setIntValues(0, mCircleL / 6);
             mValueAnimator.start();
         }
     }
@@ -184,10 +178,8 @@ public class GossipView extends View {
      */
     public void stopRoate() {
         isSwitch = false;
-        mCircleM_white = mCircleL / 2;
-        mCircleM_black = mCircleL / 2;
-        mCurrentM_W = mCircleM_white;
-        mCurrentM_B = mCircleM_black;
+        isSetValue = true;
+        initSize();
 
         if (mRotateAnimation != null) {
             mRotateAnimation.cancel();
@@ -197,6 +189,18 @@ public class GossipView extends View {
         }
 
         invalidate();
+    }
+
+    /**
+     * 初始化各圆的宽度
+     */
+    public void initSize() {
+        mCircleM_white = mCircleL / 2;
+        mCircleS_white = mCircleM_white / 2;
+        mCircleM_black = mCircleL / 2;
+        mCircleS_black = mCircleM_black / 2;
+        mCurrentM_W = mCircleM_white;
+        mCurrentM_B = mCircleM_black;
     }
 
 }
